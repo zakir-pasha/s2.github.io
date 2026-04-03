@@ -24,6 +24,7 @@
     --amber: #d97706;
     --amber-light: #fffbeb;
     --red: #dc2626;
+    --red-light: #fef2f2;
   }
 
   body {
@@ -35,7 +36,7 @@
   }
 
   .wrapper {
-    max-width: 900px;
+    max-width: 960px;
     margin: 0 auto;
   }
 
@@ -66,7 +67,26 @@
     font-size: 14px;
     color: var(--text-secondary);
     line-height: 1.6;
-    max-width: 600px;
+    max-width: 640px;
+  }
+
+  .cac-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    background: var(--red-light);
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--red);
+  }
+
+  .cac-note::before {
+    content: '●';
+    font-size: 8px;
   }
 
   .controls {
@@ -119,7 +139,7 @@
 
   .metrics {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 24px;
   }
@@ -140,9 +160,10 @@
     width: 3px;
   }
 
-  .metric.blue::before { background: var(--blue); }
-  .metric.green::before { background: var(--green); }
-  .metric.amber::before { background: var(--amber); }
+  .metric.blue::before   { background: var(--blue); }
+  .metric.green::before  { background: var(--green); }
+  .metric.amber::before  { background: var(--amber); }
+  .metric.red::before    { background: var(--red); }
 
   .metric-label {
     font-size: 11px;
@@ -154,18 +175,19 @@
   }
 
   .metric-lost {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 600;
     line-height: 1;
     margin-bottom: 4px;
   }
 
-  .metric.blue .metric-lost { color: var(--blue); }
+  .metric.blue .metric-lost  { color: var(--blue); }
   .metric.green .metric-lost { color: var(--green); }
   .metric.amber .metric-lost { color: var(--amber); }
+  .metric.red .metric-lost   { color: var(--red); }
 
   .metric-abs {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
     font-family: 'DM Mono', monospace;
   }
@@ -204,13 +226,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .legend {
     display: flex;
-    gap: 20px;
+    gap: 16px;
     font-size: 12px;
     color: var(--text-secondary);
+    flex-wrap: wrap;
   }
 
   .legend-item {
@@ -223,6 +248,12 @@
     width: 10px;
     height: 10px;
     border-radius: 2px;
+  }
+
+  .legend-dash {
+    width: 16px;
+    height: 2px;
+    border-top: 2px dashed var(--red);
   }
 
   .chart-container {
@@ -245,7 +276,8 @@
   <div class="header">
     <div class="eyebrow">S2 Candidate Scoring Analysis · Q1 2025 Hires · n=65</div>
     <h1>What do we lose when we raise the S1 cutoff?</h1>
-    <p class="subtitle">Drag the slider to set a minimum S1 score. The chart shows what % of headcount, sales, and 3YR VM is <em>lost</em> relative to no filter.</p>
+    <p class="subtitle">Drag the slider to set a minimum S1 score. The chart shows what % of headcount, sales, 3YR VM, and 3YR VM-CAC is <em>lost</em> relative to no filter.</p>
+    <div class="cac-note">CAC estimated at $25,000 per rep</div>
   </div>
 
   <div class="controls">
@@ -272,6 +304,11 @@
       <div class="metric-lost" id="mVMLost">0%</div>
       <div class="metric-abs" id="mVMAbs">$3.80M → $3.80M</div>
     </div>
+    <div class="metric red">
+      <div class="metric-label">3YR VM-CAC lost</div>
+      <div class="metric-lost" id="mVMCACLost">0%</div>
+      <div class="metric-abs" id="mVMCACAbs">$2.17M → $2.17M</div>
+    </div>
   </div>
 
   <div class="chart-wrap">
@@ -281,6 +318,7 @@
         <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Headcount</div>
         <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Sales</div>
         <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>3YR VM</div>
+        <div class="legend-item"><div class="legend-dash"></div>3YR VM-CAC</div>
       </div>
     </div>
     <div class="chart-container">
@@ -288,7 +326,7 @@
     </div>
   </div>
 
-  <div class="footnote">Source: S2_Analysis_Lifetime · Raw Data · Q1 Hires · Angi Internal</div>
+  <div class="footnote">Source: S2_Analysis_Lifetime · Raw Data · Q1 Hires · Angi Internal · CAC ~$25k/rep estimate</div>
 
 </div>
 
@@ -297,25 +335,37 @@ const HC_N = [65,65,65,65,65,65,65,65,65,65,65,64,64,63,63,63,63,63,63,61,61,60,
 const S_N  = [1176,1176,1176,1176,1176,1176,1176,1176,1176,1176,1176,1176,1176,1158,1158,1158,1158,1158,1158,1158,1158,1069,1069,1069,1069,1067,1067,995,995,995,994,946,946,899,899,899,892,892,892,892,886,884,884,884,884,854,827,827,827,827,827,755,755,712,642,616,616,616,614,614,614,614,614,596,567,567,567,567,567,465,465,465,465,465,463,463,463,462,462,448,434,383,307,189,189,187,187,124,124,68,68,68,68,68,68,26,26,26,0,0,0];
 const VM_N = [3797809,3797809,3797809,3797809,3797809,3797809,3797809,3797809,3797809,3797809,3797809,3797809,3797809,3748205,3748205,3748205,3748205,3748205,3748205,3748205,3748205,3566251,3566251,3566251,3566251,3562411,3562411,3279940,3279940,3279940,3278294,3188697,3188697,3088506,3088506,3088506,3075526,3075526,3075526,3075526,3066202,3061997,3061997,3061997,3061997,2997931,2906851,2906851,2906851,2906851,2906851,2762225,2762225,2645027,2374505,2298512,2298512,2298512,2293759,2293759,2293759,2293759,2293759,2257744,2189369,2189369,2189369,2189369,2189369,1880431,1880431,1880431,1880431,1880431,1876592,1876592,1876592,1874947,1874947,1838566,1812493,1709761,1496137,505316,505316,501843,501843,317293,317293,173459,173459,173459,173459,173459,173459,59933,59933,59933,0,0,0];
 
-const ALL_T = Array.from({length:101},(_,i)=>i);
-const BASE_HC = 65, BASE_S = 1176, BASE_VM = 3797809;
+const CAC_PER_REP = 25000;
+const ALL_T = Array.from({length: 101}, (_, i) => i);
 
-const hcLost    = HC_N.map(v => +((1 - v/BASE_HC)*100).toFixed(1));
-const salesLost = S_N.map(v  => +((1 - v/BASE_S)*100).toFixed(1));
-const vmLost    = VM_N.map(v => +((1 - v/BASE_VM)*100).toFixed(1));
+const BASE_HC   = 65;
+const BASE_S    = 1176;
+const BASE_VM   = 3797809;
+const BASE_VMCAC = BASE_VM - BASE_HC * CAC_PER_REP; // 2,172,809
+
+// VM-CAC array: gross VM minus (headcount at that cutoff * CAC), floored at 0
+const VMCAC_N = VM_N.map((v, i) => Math.max(0, v - HC_N[i] * CAC_PER_REP));
+
+const hcLost    = HC_N.map(v   => +((1 - v / BASE_HC)   * 100).toFixed(1));
+const salesLost = S_N.map(v    => +((1 - v / BASE_S)    * 100).toFixed(1));
+const vmLost    = VM_N.map(v   => +((1 - v / BASE_VM)   * 100).toFixed(1));
+const vmCacLost = VMCAC_N.map(v => +((1 - v / BASE_VMCAC) * 100).toFixed(1));
 
 function fmtVM(v) {
-  if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
-  return '$' + Math.round(v/1000) + 'k';
+  if (v >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M';
+  if (v >= 1e3) return '$' + Math.round(v / 1000) + 'k';
+  return '$' + Math.round(v);
 }
 
-function getInsight(t, hcL, sL, vmL) {
-  if (t === 0) return 'Move the slider to see how raising the S1 cutoff affects headcount, sales, and 3YR VM.';
+function getInsight(t, hcL, sL, vmL, vmCacL) {
+  if (t === 0) return 'Move the slider to see how raising the S1 cutoff affects headcount, sales, 3YR VM, and 3YR VM-CAC.';
   const gap = hcL - vmL;
-  const efficiency = gap > 5 ? `The cut is <strong>efficient</strong> — you're losing ${hcL}% of headcount but only ${vmL}% of 3YR VM (a ${gap.toFixed(1)}pp gap).`
-    : gap < -2 ? `<strong>Caution:</strong> you're losing more VM (${vmL}%) than headcount (${hcL}%) — this cutoff is removing high-value reps.`
+  const efficiency = gap > 5
+    ? `The cut is <strong>efficient</strong> — you're losing ${hcL}% of headcount but only ${vmL}% of 3YR VM (a ${gap.toFixed(1)}pp gap).`
+    : gap < -2
+    ? `<strong>Caution:</strong> you're losing more VM (${vmL}%) than headcount (${hcL}%) — this cutoff is removing high-value reps.`
     : `The cut is roughly <strong>proportional</strong> — headcount and VM are dropping at similar rates.`;
-  return `At S1 ≥ ${t}: ${efficiency} Sales lost: ${sL}%.`;
+  return `At S1 ≥ ${t}: ${efficiency} Sales lost: ${sL}%. VM-CAC lost: ${vmCacL}%.`;
 }
 
 let chart;
@@ -358,10 +408,22 @@ function buildChart() {
           tension: 0.2
         },
         {
+          label: '3YR VM-CAC % lost',
+          data: vmCacLost,
+          borderColor: '#dc2626',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.2,
+          borderDash: [5, 3]
+        },
+        // markers
+        {
           label: 'hc-marker',
-          data: ALL_T.map((_,i) => i===0 ? hcLost[0] : null),
+          data: ALL_T.map((_, i) => i === 0 ? hcLost[0] : null),
           borderWidth: 0,
-          pointRadius: ALL_T.map((_,i) => i===0 ? 9 : 0),
+          pointRadius: ALL_T.map((_, i) => i === 0 ? 9 : 0),
           pointBackgroundColor: '#2563eb',
           pointBorderColor: '#fff',
           pointBorderWidth: 2.5,
@@ -369,9 +431,9 @@ function buildChart() {
         },
         {
           label: 's-marker',
-          data: ALL_T.map((_,i) => i===0 ? salesLost[0] : null),
+          data: ALL_T.map((_, i) => i === 0 ? salesLost[0] : null),
           borderWidth: 0,
-          pointRadius: ALL_T.map((_,i) => i===0 ? 9 : 0),
+          pointRadius: ALL_T.map((_, i) => i === 0 ? 9 : 0),
           pointBackgroundColor: '#16a34a',
           pointBorderColor: '#fff',
           pointBorderWidth: 2.5,
@@ -379,10 +441,20 @@ function buildChart() {
         },
         {
           label: 'vm-marker',
-          data: ALL_T.map((_,i) => i===0 ? vmLost[0] : null),
+          data: ALL_T.map((_, i) => i === 0 ? vmLost[0] : null),
           borderWidth: 0,
-          pointRadius: ALL_T.map((_,i) => i===0 ? 9 : 0),
+          pointRadius: ALL_T.map((_, i) => i === 0 ? 9 : 0),
           pointBackgroundColor: '#d97706',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2.5,
+          fill: false
+        },
+        {
+          label: 'vmcac-marker',
+          data: ALL_T.map((_, i) => i === 0 ? vmCacLost[0] : null),
+          borderWidth: 0,
+          pointRadius: ALL_T.map((_, i) => i === 0 ? 9 : 0),
+          pointBackgroundColor: '#dc2626',
           pointBorderColor: '#fff',
           pointBorderWidth: 2.5,
           fill: false
@@ -398,7 +470,7 @@ function buildChart() {
         tooltip: {
           mode: 'index',
           intersect: false,
-          filter: item => item.datasetIndex < 3,
+          filter: item => item.datasetIndex < 4,
           backgroundColor: '#1a1917',
           titleColor: '#a09e98',
           bodyColor: '#f7f6f2',
@@ -409,7 +481,7 @@ function buildChart() {
           callbacks: {
             title: ctx => 'S1 cutoff ≥ ' + ctx[0].label,
             label: ctx => {
-              const names = ['Headcount lost','Sales lost','3YR VM lost'];
+              const names = ['Headcount lost', 'Sales lost', '3YR VM lost', '3YR VM-CAC lost'];
               return '  ' + names[ctx.datasetIndex] + ': ' + ctx.raw.toFixed(1) + '%';
             }
           }
@@ -434,10 +506,10 @@ function buildChart() {
 }
 
 function updateMarkers(t) {
-  [[hcLost,3],[salesLost,4],[vmLost,5]].forEach(([curve, di]) => {
+  [[hcLost, 4], [salesLost, 5], [vmLost, 6], [vmCacLost, 7]].forEach(([curve, di]) => {
     const ds = chart.data.datasets[di];
-    ds.data = ALL_T.map((_,i) => i===t ? curve[i] : null);
-    ds.pointRadius = ALL_T.map((_,i) => i===t ? 9 : 0);
+    ds.data = ALL_T.map((_, i) => i === t ? curve[i] : null);
+    ds.pointRadius = ALL_T.map((_, i) => i === t ? 9 : 0);
   });
   chart.update('none');
 }
@@ -448,19 +520,23 @@ function update() {
   document.getElementById('sliderVal').textContent = t;
   document.getElementById('slider').style.setProperty('--pct', t + '%');
 
-  const hcL  = hcLost[t];
-  const sL   = salesLost[t];
-  const vmL  = vmLost[t];
-  const hcN  = HC_N[t];
-  const sN   = S_N[t];
-  const vmN  = VM_N[t];
+  const hcL    = hcLost[t];
+  const sL     = salesLost[t];
+  const vmL    = vmLost[t];
+  const vmCacL = vmCacLost[t];
+  const hcN    = HC_N[t];
+  const sN     = S_N[t];
+  const vmN    = VM_N[t];
+  const vmCacN = VMCAC_N[t];
 
-  document.getElementById('mHCLost').textContent  = hcL.toFixed(1) + '%';
-  document.getElementById('mHCAbs').textContent   = `${BASE_HC} → ${hcN} reps`;
-  document.getElementById('mSLost').textContent   = sL.toFixed(1) + '%';
-  document.getElementById('mSAbs').textContent    = `${BASE_S.toLocaleString()} → ${sN.toLocaleString()}`;
-  document.getElementById('mVMLost').textContent  = vmL.toFixed(1) + '%';
-  document.getElementById('mVMAbs').textContent   = `${fmtVM(BASE_VM)} → ${fmtVM(vmN)}`;
+  document.getElementById('mHCLost').textContent    = hcL.toFixed(1) + '%';
+  document.getElementById('mHCAbs').textContent     = `${BASE_HC} → ${hcN} reps`;
+  document.getElementById('mSLost').textContent     = sL.toFixed(1) + '%';
+  document.getElementById('mSAbs').textContent      = `${BASE_S.toLocaleString()} → ${sN.toLocaleString()}`;
+  document.getElementById('mVMLost').textContent    = vmL.toFixed(1) + '%';
+  document.getElementById('mVMAbs').textContent     = `${fmtVM(BASE_VM)} → ${fmtVM(vmN)}`;
+  document.getElementById('mVMCACLost').textContent = vmCacL.toFixed(1) + '%';
+  document.getElementById('mVMCACAbs').textContent  = `${fmtVM(BASE_VMCAC)} → ${fmtVM(vmCacN)}`;
 
   updateMarkers(t);
 }
