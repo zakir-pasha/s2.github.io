@@ -1,12 +1,473 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S1 Score Cutoff Analysis — Q1 2025 Hires</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --border: #e4e2da;
+    --text-primary: #1a1917;
+    --text-secondary: #6b6860;
+    --text-muted: #a09e98;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --red: #dc2626;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 40px 32px;
+  }
+
+  .wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .header {
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 600px;
+  }
+
+  .controls {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .slider-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .slider-label span {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .slider-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary) !important;
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    appearance: none;
+    background: linear-gradient(to right, #2563eb 0%, #2563eb var(--pct, 0%), #e4e2da var(--pct, 0%), #e4e2da 100%);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #2563eb;
+    border: 3px solid white;
+    box-shadow: 0 0 0 1px #2563eb;
+    cursor: pointer;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+
+  .metric.blue::before { background: var(--blue); }
+  .metric.green::before { background: var(--green); }
+  .metric.amber::before { background: var(--amber); }
+
+  .metric-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .metric-lost {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .metric.blue .metric-lost { color: var(--blue); }
+  .metric.green .metric-lost { color: var(--green); }
+  .metric.amber .metric-lost { color: var(--amber); }
+
+  .metric-abs {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .insight-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    min-height: 44px;
+  }
+
+  .insight-bar strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .chart-container {
+    position: relative;
+    width: 100%;
+    height: 320px;
+  }
+
+  .footnote {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    text-align: right;
+  }
+</style>
 </head>
 <body>
-    <h1>Welcome to the s2.github.io</h1>
-    <p>This is your index.html placeholder.</p>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="eyebrow">S2 Candidate Scoring Analysis · Q1 2025 Hires · n=65</div>
+    <h1>What do we lose when we raise the S1 cutoff?</h1>
+    <p class="subtitle">Drag the slider to set a minimum S1 score. The chart shows what % of headcount, sales, and 3YR VM is <em>lost</em> relative to no filter.</p>
+  </div>
+
+  <div class="controls">
+    <div class="slider-label">
+      <span>S1 minimum cutoff — filter out reps scoring below</span>
+      <span class="slider-val" id="sliderVal">0</span>
+    </div>
+    <input type="range" min="0" max="100" value="0" step="1" id="slider" />
+  </div>
+
+  <div class="metrics">
+    <div class="metric blue">
+      <div class="metric-label">Headcount lost</div>
+      <div class="metric-lost" id="mHCLost">0%</div>
+      <div class="metric-abs" id="mHCAbs">65 → 65 reps</div>
+    </div>
+    <div class="metric green">
+      <div class="metric-label">Sales lost</div>
+      <div class="metric-lost" id="mSLost">0%</div>
+      <div class="metric-abs" id="mSAbs">1,172 → 1,172</div>
+    </div>
+    <div class="metric amber">
+      <div class="metric-label">3YR VM lost</div>
+      <div class="metric-lost" id="mVMLost">0%</div>
+      <div class="metric-abs" id="mVMAbs">$3.78M → $3.78M</div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">
+      <span>% lost vs no cutoff, by S1 minimum score</span>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Headcount</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Sales</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>3YR VM</div>
+      </div>
+    </div>
+    <div class="chart-container">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <div class="footnote">Source: S2_Analysis_Lifetime · Raw Data · Q1 Hires · Angi Internal</div>
+
+</div>
+
+<script>
+const HC_N = [65,65,65,65,65,65,65,65,65,65,65,64,64,63,63,63,63,63,63,61,61,60,60,60,60,59,59,58,58,58,57,56,56,53,53,53,52,51,51,51,49,48,48,47,47,43,41,41,41,41,41,40,40,38,36,33,33,33,32,32,32,32,32,31,30,30,30,29,29,23,23,23,22,22,21,21,21,20,20,18,16,14,12,11,11,9,9,8,8,6,6,6,5,5,4,3,3,3,0,0,0];
+const S_N  = [1172,1172,1172,1172,1172,1172,1172,1172,1172,1172,1172,1172,1172,1154,1154,1154,1154,1154,1154,1154,1154,1068,1068,1068,1068,1066,1066,994,994,994,993,945,945,898,898,898,891,891,891,891,885,883,883,883,883,853,826,826,826,826,826,754,754,711,641,615,615,615,613,613,613,613,613,595,566,566,566,566,566,464,464,464,464,464,462,462,462,461,461,447,433,382,306,189,189,187,187,124,124,68,68,68,68,68,68,26,26,26,0,0,0];
+const VM_N = [3778013,3778013,3778013,3778013,3778013,3778013,3778013,3778013,3778013,3778013,3778013,3778013,3778013,3731948,3731948,3731948,3731948,3731948,3731948,3731948,3731948,3554846,3554846,3554846,3554846,3551007,3551007,3267546,3267546,3267546,3265900,3176528,3176528,3076273,3076273,3076273,3063293,3063293,3063293,3063293,3053969,3049765,3049765,3049765,3049765,2987178,2896096,2896096,2896096,2896096,2896096,2756150,2756150,2638952,2376901,2300909,2300909,2300909,2296156,2296156,2296156,2296156,2296156,2260140,2191766,2191766,2191766,2191766,2191766,1883584,1883584,1883584,1883584,1883584,1879745,1879745,1879745,1878099,1878099,1841718,1815646,1712951,1502786,558140,558140,554666,554666,310683,310683,170272,170272,170272,170272,170272,170272,56746,56746,56746,0,0,0];
+
+const ALL_T = Array.from({length:101},(_,i)=>i);
+const BASE_HC = 65, BASE_S = 1172, BASE_VM = 3778013;
+
+const hcLost    = HC_N.map(v => +((1 - v/BASE_HC)*100).toFixed(1));
+const salesLost = S_N.map(v  => +((1 - v/BASE_S)*100).toFixed(1));
+const vmLost    = VM_N.map(v => +((1 - v/BASE_VM)*100).toFixed(1));
+
+function fmtVM(v) {
+  if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+  return '$' + Math.round(v/1000) + 'k';
+}
+
+function getInsight(t, hcL, sL, vmL) {
+  if (t === 0) return 'Move the slider to see how raising the S1 cutoff affects headcount, sales, and 3YR VM.';
+  const gap = hcL - vmL;
+  const efficiency = gap > 5 ? `The cut is <strong>efficient</strong> — you're losing ${hcL}% of headcount but only ${vmL}% of 3YR VM (a ${gap.toFixed(1)}pp gap).`
+    : gap < -2 ? `<strong>Caution:</strong> you're losing more VM (${vmL}%) than headcount (${hcL}%) — this cutoff is removing high-value reps.`
+    : `The cut is roughly <strong>proportional</strong> — headcount and VM are dropping at similar rates.`;
+  return `At S1 ≥ ${t}: ${efficiency} Sales lost: ${sL}%.`;
+}
+
+let chart;
+
+function buildChart() {
+  const ctx = document.getElementById('chart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ALL_T,
+      datasets: [
+        {
+          label: 'Headcount % lost',
+          data: hcLost,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37,99,235,0.06)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.2
+        },
+        {
+          label: 'Sales % lost',
+          data: salesLost,
+          borderColor: '#16a34a',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.2
+        },
+        {
+          label: '3YR VM % lost',
+          data: vmLost,
+          borderColor: '#d97706',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.2
+        },
+        {
+          label: 'hc-marker',
+          data: ALL_T.map((_,i) => i===0 ? hcLost[0] : null),
+          borderWidth: 0,
+          pointRadius: ALL_T.map((_,i) => i===0 ? 9 : 0),
+          pointBackgroundColor: '#2563eb',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2.5,
+          fill: false
+        },
+        {
+          label: 's-marker',
+          data: ALL_T.map((_,i) => i===0 ? salesLost[0] : null),
+          borderWidth: 0,
+          pointRadius: ALL_T.map((_,i) => i===0 ? 9 : 0),
+          pointBackgroundColor: '#16a34a',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2.5,
+          fill: false
+        },
+        {
+          label: 'vm-marker',
+          data: ALL_T.map((_,i) => i===0 ? vmLost[0] : null),
+          borderWidth: 0,
+          pointRadius: ALL_T.map((_,i) => i===0 ? 9 : 0),
+          pointBackgroundColor: '#d97706',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2.5,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          filter: item => item.datasetIndex < 3,
+          backgroundColor: '#1a1917',
+          titleColor: '#a09e98',
+          bodyColor: '#f7f6f2',
+          titleFont: { family: 'DM Mono', size: 11 },
+          bodyFont: { family: 'DM Sans', size: 13 },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            title: ctx => 'S1 cutoff ≥ ' + ctx[0].label,
+            label: ctx => {
+              const names = ['Headcount lost','Sales lost','3YR VM lost'];
+              return '  ' + names[ctx.datasetIndex] + ': ' + ctx.raw.toFixed(1) + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#a09e98', font: { family: 'DM Mono', size: 11 } },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          title: { display: true, text: 'S1 minimum score', color: '#6b6860', font: { family: 'DM Sans', size: 12 } }
+        },
+        y: {
+          min: 0,
+          max: 105,
+          ticks: { color: '#a09e98', font: { family: 'DM Mono', size: 11 }, callback: v => v + '%' },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          title: { display: true, text: '% lost vs no cutoff', color: '#6b6860', font: { family: 'DM Sans', size: 12 } }
+        }
+      }
+    }
+  });
+}
+
+function updateMarkers(t) {
+  [[hcLost,3],[salesLost,4],[vmLost,5]].forEach(([curve, di]) => {
+    const ds = chart.data.datasets[di];
+    ds.data = ALL_T.map((_,i) => i===t ? curve[i] : null);
+    ds.pointRadius = ALL_T.map((_,i) => i===t ? 9 : 0);
+  });
+  chart.update('none');
+}
+
+function update() {
+  const t = +document.getElementById('slider').value;
+
+  document.getElementById('sliderVal').textContent = t;
+  document.getElementById('slider').style.setProperty('--pct', t + '%');
+
+  const hcL  = hcLost[t];
+  const sL   = salesLost[t];
+  const vmL  = vmLost[t];
+  const hcN  = HC_N[t];
+  const sN   = S_N[t];
+  const vmN  = VM_N[t];
+
+  document.getElementById('mHCLost').textContent  = hcL.toFixed(1) + '%';
+  document.getElementById('mHCAbs').textContent   = `${BASE_HC} → ${hcN} reps`;
+  document.getElementById('mSLost').textContent   = sL.toFixed(1) + '%';
+  document.getElementById('mSAbs').textContent    = `${BASE_S.toLocaleString()} → ${sN.toLocaleString()}`;
+  document.getElementById('mVMLost').textContent  = vmL.toFixed(1) + '%';
+  document.getElementById('mVMAbs').textContent   = `${fmtVM(BASE_VM)} → ${fmtVM(vmN)}`;
+
+  updateMarkers(t);
+}
+
+buildChart();
+document.getElementById('slider').addEventListener('input', update);
+update();
+</script>
 </body>
 </html>
